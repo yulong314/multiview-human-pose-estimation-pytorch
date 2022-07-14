@@ -34,7 +34,11 @@ class Aggregation(nn.Module):
         CAMNUM = cfg.DATASET.CAMNUM
         NUM_NETS = CAMNUM *(CAMNUM - 1)
         size = cfg.NETWORK.HEATMAP_SIZE
-        self.weights = weights
+        first = 1/CAMNUM * 2
+        other = (1 - first) / (CAMNUM - 1)
+        self.weights = [first] + [other] * (CAMNUM - 1)
+        # self.weights = weights
+        # assert sum(self.weights) == 1
         self.aggre = nn.ModuleList()
         for i in range(NUM_NETS):
             self.aggre.append(ChannelWiseFC(size))
