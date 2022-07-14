@@ -35,7 +35,7 @@ def routing(raw_features, aggre_features, is_aggre, meta):
         batch_size = a.size(0)
         for i in range(batch_size):
             s = m['source'][i]
-            view[i] = a[i] if s == 'h36m' else r[i]
+            view[i] = a[i] if s == 'h36m' or s == 'coco' else r[i]
         output.append(view)
     return output
 
@@ -93,26 +93,27 @@ def train(config, data, model, criterion, optim, epoch, output_dir,
         batch_time.update(time.time() - end)
         end = time.time()
 
+        
+        gpu_memory_usage = torch.cuda.memory_allocated(0)
+        msg = 'Epoch: [{0}][{1}/{2}]\t' \
+                'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t' \
+                'Speed {speed:.1f} samples/s\t' \
+                'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t' \
+                'Loss {loss.val:.5f} ({loss.avg:.5f})\t' \
+                'Accuracy {acc.val:.3f} ({acc.avg:.3f})\t' \
+                'Memory {memory:.1f}'.format(
+                    epoch, i, len(data), batch_time=batch_time,
+                    speed=len(input) * input[0].size(0) / batch_time.val,
+                    data_time=data_time, loss=losses, acc=avg_acc, memory=gpu_memory_usage)
+        logger.info(msg)
+
+        writer = writer_dict['writer']
+        global_steps = writer_dict['train_global_steps']
+        writer.add_scalar('train_loss', losses.val, global_steps)
+        writer.add_scalar('train_acc', avg_acc.val, global_steps)
+        writer_dict['train_global_steps'] = global_steps + 1
+
         if i % config.PRINT_FREQ == 0:
-            gpu_memory_usage = torch.cuda.memory_allocated(0)
-            msg = 'Epoch: [{0}][{1}/{2}]\t' \
-                  'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t' \
-                  'Speed {speed:.1f} samples/s\t' \
-                  'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t' \
-                  'Loss {loss.val:.5f} ({loss.avg:.5f})\t' \
-                  'Accuracy {acc.val:.3f} ({acc.avg:.3f})\t' \
-                  'Memory {memory:.1f}'.format(
-                      epoch, i, len(data), batch_time=batch_time,
-                      speed=len(input) * input[0].size(0) / batch_time.val,
-                      data_time=data_time, loss=losses, acc=avg_acc, memory=gpu_memory_usage)
-            logger.info(msg)
-
-            writer = writer_dict['writer']
-            global_steps = writer_dict['train_global_steps']
-            writer.add_scalar('train_loss', losses.val, global_steps)
-            writer.add_scalar('train_acc', avg_acc.val, global_steps)
-            writer_dict['train_global_steps'] = global_steps + 1
-
             for k in range(len(input)):
                 view_name = 'view_{}'.format(k + 1)
                 prefix = '{}_{}_{:08}'.format(
@@ -134,11 +135,11 @@ def validate(config,
     losses = AverageMeter()
     avg_acc = AverageMeter()
 
-    nsamples = len(dataset) * 4
+    nsamples = len(dataset) * config.DATASET.CAMNUM
     is_aggre = config.NETWORK.AGGRE
     njoints = config.NETWORK.NUM_JOINTS
-    height = int(config.NETWORK.HEATMAP_SIZE[0])
-    width = int(config.NETWORK.HEATMAP_SIZE[1])
+    height = int(config.NETWORK.HEATMAP_SIZE[1])
+    width = int(config.NETWORK.HEATMAP_SIZE[0])
     all_preds = np.zeros((nsamples, njoints, 3), dtype=np.float32)
     all_heatmaps = np.zeros(
         (nsamples, njoints, height, width), dtype=np.float32)

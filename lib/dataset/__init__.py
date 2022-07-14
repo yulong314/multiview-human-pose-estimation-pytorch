@@ -7,3 +7,4 @@ from dataset.h36m import H36MDataset as h36m
 from dataset.multiview_h36m import MultiViewH36M as multiview_h36m
 from dataset.mixed_dataset import MixedDataset as mixed
 from dataset.multiview_mpii import MultiviewMPIIDataset as multiview_mpii
+from dataset.multiview_coco_h36m import Multiview_coco_h36m

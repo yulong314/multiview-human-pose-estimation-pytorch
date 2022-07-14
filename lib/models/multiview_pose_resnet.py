@@ -11,7 +11,7 @@ from __future__ import print_function
 import torch
 import torch.nn as nn
 
-
+import time
 class ChannelWiseFC(nn.Module):
 
     def __init__(self, size):
@@ -85,7 +85,9 @@ class MultiViewPose(nn.Module):
                 single_views.append(heatmaps)
             multi_views = []
             if self.config.NETWORK.AGGRE:
+                time0 = time.time()
                 multi_views = self.aggre_layer(single_views)
+                print("Aggregation time: {}".format(time.time() - time0))
             return single_views, multi_views
         else:
             return self.resnet(views)

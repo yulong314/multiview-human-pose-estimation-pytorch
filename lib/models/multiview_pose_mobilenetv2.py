@@ -16,7 +16,7 @@ class ChannelWiseFC(nn.Module):
 
     def __init__(self, size):
         super(ChannelWiseFC, self).__init__()
-        self.weight = nn.Parameter(torch.Tensor(size, size))
+        self.weight = nn.Parameter(torch.Tensor(size[0]*size[1], size[0]*size[1]))
         self.weight.data.uniform_(0, 0.1)
 
     def forward(self, input):
@@ -31,12 +31,13 @@ class Aggregation(nn.Module):
 
     def __init__(self, cfg, weights=[0.4, 0.2, 0.2, 0.2]):
         super(Aggregation, self).__init__()
-        NUM_NETS = 12
-        size = int(cfg.NETWORK.HEATMAP_SIZE[0])
+        CAMNUM = cfg.DATASET.CAMNUM
+        NUM_NETS = CAMNUM *(CAMNUM - 1)
+        size = cfg.NETWORK.HEATMAP_SIZE
         self.weights = weights
         self.aggre = nn.ModuleList()
         for i in range(NUM_NETS):
-            self.aggre.append(ChannelWiseFC(size * size))
+            self.aggre.append(ChannelWiseFC(size))
 
     def sort_views(self, target, all_views):
         indicator = [target is item for item in all_views]

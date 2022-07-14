@@ -102,10 +102,15 @@ class JointsDataset(Dataset):
         return len(self.db)
 
     def __getitem__(self, idx):
+        if idx < 0:
+            return None, None, None, None
         db_rec = copy.deepcopy(self.db[idx])
 
         image_dir = 'images.zip@' if self.data_format == 'zip' else ''
-        image_file = osp.join(self.root, db_rec['source'], image_dir, 'images',
+        if db_rec['source'] == 'coco':
+            image_file = osp.join(self.img_prefix, db_rec['image'])
+        else:
+            image_file = osp.join(self.root, db_rec['source'], image_dir, 'images',
                               db_rec['image'])
         if self.data_format == 'zip':
             from utils import zipreader

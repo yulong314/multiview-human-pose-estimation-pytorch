@@ -48,7 +48,7 @@ class MultiViewH36M(JointsDataset):
                                  'h36m_{}_uncrop.pkl'.format(image_set))
 
         self.db = self.load_db(anno_file)
-
+        
         self.u2a_mapping = super().get_mapping()
         super().do_mapping()
 

@@ -80,8 +80,8 @@ def main():
     logger, final_output_dir, tb_log_dir = create_logger(
         config, args.cfg, 'train')
 
-    logger.info(pprint.pformat(args))
-    logger.info(pprint.pformat(config))
+    # logger.info(pprint.pformat(args))
+    # logger.info(pprint.pformat(config))
 
     cudnn.benchmark = config.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = config.CUDNN.DETERMINISTIC
@@ -92,14 +92,14 @@ def main():
 
     model = eval('models.' + config.MODEL + '.get_multiview_pose_net')(
         backbone_model, config)
-    print(model)
+    # print(model)
 
     this_dir = os.path.dirname(__file__)
     shutil.copy2(
         os.path.join(this_dir, '../../lib/models', config.MODEL + '.py'),
         final_output_dir)
     shutil.copy2(args.cfg, final_output_dir)
-    logger.info(pprint.pformat(model))
+    # logger.info(pprint.pformat(model))
 
     writer_dict = {
         'writer': SummaryWriter(log_dir=tb_log_dir),
@@ -124,16 +124,23 @@ def main():
         optimizer, config.TRAIN.LR_STEP, config.TRAIN.LR_FACTOR)
 
     # Data loading code
+    serials = "4105,4097,4112,4102,4103,4113,4101,4114,4100,4099,4098".split(",")
+    annfile = "/2t/data/recordedSamples/pose2/20220708/train.json"
+    img_prefix = os.path.dirname(annfile)
+    # Data loading code
     normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    train_dataset = eval('dataset.' + config.DATASET.TRAIN_DATASET)(
+    train_dataset = eval('dataset.Multiview_coco_h36m' )(
         config, config.DATASET.TRAIN_SUBSET, True,
+        annfile, img_prefix, serials,
         transforms.Compose([
             transforms.ToTensor(),
             normalize,
         ]))
-    valid_dataset = eval('dataset.' + config.DATASET.TEST_DATASET)(
-        config, config.DATASET.TEST_SUBSET, False,
+    annfile1 = "/2t/data/recordedSamples/pose2/20220708/val.json"
+    valid_dataset = eval('dataset.Multiview_coco_h36m' )(
+        config, config.DATASET.TRAIN_SUBSET, False,
+        annfile1, img_prefix, serials,
         transforms.Compose([
             transforms.ToTensor(),
             normalize,
@@ -159,7 +166,7 @@ def main():
 
         train(config, train_loader, model, criterion, optimizer, epoch,
               final_output_dir, writer_dict)
-        if epoch %20 == 0:
+        if epoch %1 == 0:
             perf_indicator = validate(config, valid_loader, valid_dataset, model,
                                     criterion, final_output_dir, writer_dict)
 
@@ -168,21 +175,28 @@ def main():
                 best_model = True
             else:
                 best_model = False
-            
-                logger.info('=> saving checkpoint to {}'.format(final_output_dir))
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'model': get_model_name(config),
-                    'state_dict': model.module.state_dict(),
-                    'perf': perf_indicator,
-                    'optimizer': optimizer.state_dict(),
-                }, best_model, final_output_dir)
+        
+            logger.info('=> saving checkpoint to {}'.format(final_output_dir))
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'model': get_model_name(config),
+                'state_dict': model.module.state_dict(),
+                'perf': perf_indicator,
+                'optimizer': optimizer.state_dict(),
+            }, best_model, final_output_dir)
 
     final_model_state_file = os.path.join(final_output_dir,
                                           'final_state.pth.tar')
     logger.info('saving final model state to {}'.format(final_model_state_file))
     torch.save(model.module.state_dict(), final_model_state_file)
     writer_dict['writer'].close()
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

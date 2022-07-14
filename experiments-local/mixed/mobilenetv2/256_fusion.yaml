@@ -1,4 +1,4 @@
-GPUS: '0'
+GPUS: '0,1'
 BACKBONE_MODEL: pose_mobilenetv2
 MODEL: multiview_pose_mobilenetv2
 DATA_DIR: ''
@@ -13,7 +13,7 @@ DATASET:
   ROOT: 'data/'
   TRAIN_SUBSET: train
   TEST_SUBSET: validation
-  DATA_FORMAT: 'zip'
+  DATA_FORMAT: 'nozip'
   ROT_FACTOR: 0
   SCALE_FACTOR: 0
 NETWORK:

@@ -100,7 +100,7 @@ config.DATASET.CROP = True
 # training data augmentation
 config.DATASET.SCALE_FACTOR = 0
 config.DATASET.ROT_FACTOR = 0
-
+config.DATASET.CAMNUM = 4
 # train
 config.TRAIN = edict()
 config.TRAIN.LR_FACTOR = 0.1

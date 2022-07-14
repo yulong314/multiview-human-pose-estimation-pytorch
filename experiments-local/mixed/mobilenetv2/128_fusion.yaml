@@ -1,6 +1,6 @@
-GPUS: '0'
-BACKBONE_MODEL: pose_resnet
-MODEL: multiview_pose_resnet
+GPUS: '0,1'
+BACKBONE_MODEL: pose_mobilenetv2
+MODEL: multiview_pose_mobilenetv2
 DATA_DIR: ''
 OUTPUT_DIR: 'output'
 LOG_DIR: 'log'
@@ -17,15 +17,15 @@ DATASET:
   ROT_FACTOR: 0
   SCALE_FACTOR: 0
 NETWORK:
-  PRETRAINED: 'models/pytorch/imagenet/resnet50-19c8e357.pth'
+  PRETRAINED: 'models/pytorch/imagenet/mobilenet_v2.pth.tar'
   TARGET_TYPE: gaussian
   AGGRE: true
   HEATMAP_SIZE:
-  - 64
-  - 64
+  - 32
+  - 32
   IMAGE_SIZE:
-  - 256
-  - 256
+  - 128
+  - 128
   NUM_JOINTS: 20
   SIGMA: 2
 POSE_RESNET:
@@ -44,7 +44,7 @@ POSE_RESNET:
 LOSS:
   USE_TARGET_WEIGHT: true
 TRAIN:
-  BATCH_SIZE: 1
+  BATCH_SIZE: 32
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 30
@@ -75,6 +75,7 @@ TEST:
   POST_PROCESS: false
   USE_GT_BBOX: true
 PICT_STRUCT:
+  FIRST_NBINS: 16
   PAIRWISE_FILE: 'data/pict/pairwise.pkl'
 DEBUG:
   DEBUG: true
