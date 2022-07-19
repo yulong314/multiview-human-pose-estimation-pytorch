@@ -39,6 +39,9 @@ def routing(raw_features, aggre_features, is_aggre, meta):
         output.append(view)
     return output
 
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
 
 def train(config, data, model, criterion, optim, epoch, output_dir,
           writer_dict):
@@ -93,18 +96,19 @@ def train(config, data, model, criterion, optim, epoch, output_dir,
         batch_time.update(time.time() - end)
         end = time.time()
 
-        
+        lr = get_lr(optim)
         gpu_memory_usage = torch.cuda.memory_allocated(0)
-        msg = 'Epoch: [{0}][{1}/{2}]\t' \
-                'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t' \
-                'Speed {speed:.1f} samples/s\t' \
-                'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t' \
-                'Loss {loss.val:.5f} ({loss.avg:.5f})\t' \
-                'Accuracy {acc.val:.3f} ({acc.avg:.3f})\t' \
-                'Memory {memory:.1f}'.format(
+        msg = 'Epoch: [{0}][{1}/{2}] ' \
+                'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s) ' \
+                'Speed {speed:.1f} samples/s ' \
+                'Data {data_time.val:.3f}s ({data_time.avg:.3f}s) ' \
+                'Loss {loss.val:.5f} ({loss.avg:.5f}) ' \
+                'Accuracy {acc.val:.3f} ({acc.avg:.3f}) ' \
+                'Memory {memory:.1f} '\
+                'LR {lr:.5f}'    .format(
                     epoch, i, len(data), batch_time=batch_time,
                     speed=len(input) * input[0].size(0) / batch_time.val,
-                    data_time=data_time, loss=losses, acc=avg_acc, memory=gpu_memory_usage)
+                    data_time=data_time, loss=losses, acc=avg_acc, memory=gpu_memory_usage,lr=lr)
         logger.info(msg)
 
         writer = writer_dict['writer']

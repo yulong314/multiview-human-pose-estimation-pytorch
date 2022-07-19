@@ -29,19 +29,25 @@ class ChannelWiseFC(nn.Module):
 
 class Aggregation(nn.Module):
 
-    def __init__(self, cfg, weights=[0.4, 0.2, 0.2, 0.2]):
+    def __init__(self, cfg, pairs, weights=[0.4, 0.2, 0.2, 0.2]):
         super(Aggregation, self).__init__()
-        CAMNUM = cfg.DATASET.CAMNUM
-        NUM_NETS = CAMNUM *(CAMNUM - 1)
+        self.CAMNUM = cfg.DATASET.CAMNUM
+        self.pairs = pairs
+        self.NUM_NEIBORHOOD = len(pairs[0]) - 1
+        
+        NUM_NETS = self.CAMNUM * self.NUM_NEIBORHOOD
         size = cfg.NETWORK.HEATMAP_SIZE
-        first = 1/CAMNUM * 2
-        other = (1 - first) / (CAMNUM - 1)
-        self.weights = [first] + [other] * (CAMNUM - 1)
+        
+        y = 1  / (2 + self.NUM_NEIBORHOOD)
+        x = 2 * y
+
+        self.weights = [x] + [y] * (self.NUM_NEIBORHOOD)
         # self.weights = weights
         # assert sum(self.weights) == 1
         self.aggre = nn.ModuleList()
         for i in range(NUM_NETS):
             self.aggre.append(ChannelWiseFC(size))
+        # self.aggre = [[ChannelWiseFC(size) for i in range(self.NUM_NEIBORHOOD )] for j in range(self.CAMNUM)]
 
     def sort_views(self, target, all_views):
         indicator = [target is item for item in all_views]
@@ -61,13 +67,22 @@ class Aggregation(nn.Module):
         index = 0
         outputs = []
         nviews = len(inputs)
-        for i in range(nviews):
-            sorted_inputs = self.sort_views(inputs[i], inputs)
-            warped = [sorted_inputs[0]]
-            for j in range(1, nviews):
+
+        index = 0
+        for i in range (len(self.pairs)):
+            warped = [inputs[i]]
+            for j in range(self.NUM_NEIBORHOOD):
                 fc = self.aggre[index]
-                fc_output = fc(sorted_inputs[j])
+                fc_output = fc(inputs[i])
                 warped.append(fc_output)
+        #     pass
+        # for i in range(nviews):
+        #     sorted_inputs = self.sort_views(inputs[i], inputs)
+        #     warped = [sorted_inputs[0]]
+        #     for j in range(1, self.NUM_NEIBORHOOD + 1):
+        #         fc = self.aggre[index]
+        #         fc_output = fc(sorted_inputs[j])
+        #         warped.append(fc_output)
                 index += 1
             output = self.fuse_with_weights(warped)
             outputs.append(output)
@@ -96,7 +111,7 @@ class MultiViewPose(nn.Module):
             return self.resnet(views)
 
 
-def get_multiview_pose_net(mobilenetv2, CFG):
-    Aggre = Aggregation(CFG)
+def get_multiview_pose_net(mobilenetv2, CFG,pairs):
+    Aggre = Aggregation(CFG,pairs)
     model = MultiViewPose(mobilenetv2, Aggre, CFG)
     return model

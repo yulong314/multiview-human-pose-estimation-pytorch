@@ -72,7 +72,17 @@ def reset_config(config, args):
     if args.workers:
         config.WORKERS = args.workers
 
-
+def getPair(serials, serialsPair):
+    pairs = []
+    for serialpair in serialsPair:
+        pair = []
+        for j in serialpair:
+            strj = str(j)
+            index = serials.index(strj)
+            pair.append(index)
+        pairs.append(pair)
+    return pairs
+    
 def main():
     args = parse_args()
     reset_config(config, args)
@@ -82,7 +92,25 @@ def main():
 
     # logger.info(pprint.pformat(args))
     # logger.info(pprint.pformat(config))
-
+    # Data loading code
+    serials = "4105,4097,4112,4102,4103,4113,4101,4114,4100,4099,4098".split(",")
+#    4105,4097,4112,4102
+#    4103,4113,4101,4104
+#    4114,4100,4099,4098
+    serialsPair = [
+        [4105,4097,4102,4103],
+        [4097,4112,4105,4113],
+        [4112,4102,4097,4101],
+        [4102,4105,4112,4098],
+        [4103,4113,4098,4114],
+        [4113,4101,4103,4100],
+        [4101,4098,4113,4099],
+        [4114,4100,4098,4103],
+        [4100,4099,4114,4113],
+        [4099,4098,4100,4101],
+        [4098,4114,4099,4102],    
+    ]   
+    pairs = getPair(serials, serialsPair)
     cudnn.benchmark = config.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = config.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = config.CUDNN.ENABLED
@@ -91,7 +119,7 @@ def main():
         config, is_train=True)
 
     model = eval('models.' + config.MODEL + '.get_multiview_pose_net')(
-        backbone_model, config)
+        backbone_model, config, pairs)
     # print(model)
 
     this_dir = os.path.dirname(__file__)
@@ -123,8 +151,7 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, config.TRAIN.LR_STEP, config.TRAIN.LR_FACTOR)
 
-    # Data loading code
-    serials = "4105,4097,4112,4102,4103,4113,4101,4114,4100,4099,4098".split(",")
+
     annfile = "/2t/data/recordedSamples/pose2/20220708/train.json"
     img_prefix = os.path.dirname(annfile)
     # Data loading code

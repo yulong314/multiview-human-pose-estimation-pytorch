@@ -10,10 +10,10 @@
             "request": "launch",
             "program": "run/pose2d/test_coco_h36m.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "args": [
                 "--cfg",
-                "experiments-local/mixed/mobilenetv2/64_fusion.yaml"
+                "experiments-local/mixed/mobilenetv2/64_128fusion.yaml"
             ]            
         },
         {
