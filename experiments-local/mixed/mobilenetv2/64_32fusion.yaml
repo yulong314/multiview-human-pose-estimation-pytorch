@@ -22,10 +22,10 @@ NETWORK:
   TARGET_TYPE: gaussian
   AGGRE: true
   HEATMAP_SIZE:
-  - 16
+  - 8
   - 16
   IMAGE_SIZE:
-  - 64
+  - 32
   - 64
   NUM_JOINTS: 1
   SIGMA: 2
@@ -45,7 +45,7 @@ POSE_RESNET:
 LOSS:
   USE_TARGET_WEIGHT: true
 TRAIN:
-  BATCH_SIZE: 16
+  BATCH_SIZE: 32
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 70

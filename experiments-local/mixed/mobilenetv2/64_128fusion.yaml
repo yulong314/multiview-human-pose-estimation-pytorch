@@ -22,10 +22,10 @@ NETWORK:
   TARGET_TYPE: gaussian
   AGGRE: true
   HEATMAP_SIZE:
-  - 16
+  - 32
   - 16
   IMAGE_SIZE:
-  - 64
+  - 128
   - 64
   NUM_JOINTS: 1
   SIGMA: 2
